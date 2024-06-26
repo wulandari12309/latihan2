@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>kategori</title>
+    <script src="jquery-3.7.1.min.js"></script>
+    <script src="dataTables.js"></script>
+    <script src="dataTables.bootstrap5.js"></script>
+    <script src="bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="script.js"></script>
+    <link rel="stylesheet" href="dataTables.bootstrap5.css">
+    <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container">
+        <table class="table table-bordered">
+            <tr>
+                <td>
+                    <div class="row">
+                        <div class="float-start col-8">
+                            <h3>Data Kategori</h3>
+                        </div>
+                        <div class="float-end col-3 ms-5" id="tambah-kategori">
+                            <form action="" method="post" id="formTambah">
+                                <div class="input-group mb-3 ms-5 pe-1">
+                                    <input type="text" name="nama" id="nama" class="form-control" placeholder="Nama Kategori">
+                                    <button type="submit" class="btn btn-primary">tambah</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div class="row col-4" id="edit-kategori" style="display: none;">
+                            <form action="" method="post" id="formEdit">
+                                <div class="float-start col-9 pe-3">
+                                    <div class="input-group mb-3 ms-4">
+                                        <input type="text" name="editNama" id="editNama" class="form-control">
+                                        <button type="submit" class="btn btn-primary" id="buttonUpdate">update</button>
+                                    </div>
+                                </div>
+                                <div class="float-end col-3 ps-4">
+                                    <button class="btn btn-danger" id="batal">batal</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <table class="table table-bordered" id="example">
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Nama</th>
+                                <th>Tanggal</th>
+                                <th>Opsi</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            var table = $('#example').DataTable();
+            const tambahForm = document.getElementById('formTambah');
+            tambahForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const tambahKategori = new FormData(tambahForm);
+                const tambahNama = {
+                    nama: tambahKategori.get('nama')
+                };
+                $.ajax({
+                    url: 'http://localhost:8080/kategori',
+                    method: 'post',
+                    contentType: 'application/json',
+                    data: JSON.stringify(tambahNama),
+                    success: function (param) {  
+                        location.reload();
+                    },
+                    error: function (xhr, status) {  
+                        alert('gagal tambah');
+                    }
+                });
+            });
+
+            function formatWaktu(stringWaktu) {
+                const waktu = new Date(stringWaktu);
+                const th = waktu.getFullYear();
+                const bl = String(waktu.getMonth()+1).padStart(2, '0');
+                const hr = String(waktu.getDay()).padStart(2, '0');
+                const jam = String(waktu.getHours()).padStart(2, '0');
+                const menit = String(waktu.getMinutes()).padStart(2, '0');
+                const detik = String(waktu.getSeconds()).padStart(2, '0');
+
+                return `${th}-${bl}-${hr} ${jam}:${menit}:${detik}`;
+            }
+
+            function loadKate() {
+                $.ajax({
+                    url: 'http://localhost:8080/kategori',
+                    method: 'get',
+                    success: function (param) {  
+                        table.clear();
+                        param.forEach((kategori, index) => {
+                            const tanggal = formatWaktu(kategori.tanggal);
+                            table.row.add([
+                                index+1,
+                                kategori.nama,
+                                tanggal,
+                                `
+                                 <div class="row">
+                                    <div class="float-start col-5">
+                                        <button type="button" class="btn btn-info btn-edit" data-id="${kategori.id}" data-nama="${kategori.nama}">Edit</button>
+                                    </div>
+                                    <div class="float-end col-2">
+                                        <button type="button" class="btn btn-danger btn-hapus" data-id="${kategori.id}">Hapus</button>
+                                    </div>
+                                </div>
+                                `
+                            ]).draw(false);
+                        });
+                    },
+                    error: function (xhr, status) {  
+                        console.log('gagal memuat', xhr.status);
+                    }
+                });
+            };
+            loadKate();
+
+            editKategoriId = null;
+            $(document).on('click', '.btn-edit', function () {  
+                var id = $(this).data('id');
+                var nama = $(this).data('nama');
+                $('#edit-kategori').show();
+                $('#tambah-kategori').hide();
+                $('#editNama').val(nama).focus();
+                editKategoriId = id;
+            });
+
+            $('#batal').on('click', function () {  
+                $('#edit-kategori').hide();
+                $('#tambah-kategori').show();
+                $('#editNama').val('');
+                editKategoriId = null;
+            });
+
+            $('#buttonUpdate').on('click', function (e) {  
+                e.preventDefault();
+                if (editKategoriId) {
+                    var nama = $('#editNama').val();
+                    const formUpdate = {
+                        nama: nama
+                    };
+                    $.ajax({
+                        url: `http://localhost:8080/kategori/${editKategoriId}`,
+                        method: 'put',
+                        contentType: 'application/json',
+                        data: JSON.stringify(formUpdate),
+                        success: function (param) {  
+                            $('#edit-kategori').hide();
+                            $('#tambah-kategori').show();
+                            $('#editNama').val('');
+                            editKategoriId = null;
+                            loadKate();
+                        },
+                        error: function (xhr, status) {  
+                            alert('gagal update');
+                        }
+                    });
+                } else {
+                    alert('pilih data yang akan diedit');
+                }
+            });
+
+            $(document).on('click', '.btn-hapus', function () {  
+                var id = $(this).data('id');
+                $.ajax({
+                    url: 'http://localhost:8080/kategori/' +id,
+                    method: 'delete',
+                    success: function (param) {  
+                        loadKate();
+                    },
+                    error: function () {  
+                        alert('gagal hapus');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
