@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="jquery-3.7.1.min.js"></script>
+    <script defer src="dataTables.js"></script>
+    <script defer src="dataTables.bootstrap5.js"></script>
+    <script defer src="bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script defer src="script.js"></script>
+    <link rel="stylesheet" href="dataTables.bootstrap5.css">
+    <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container">
+        <table class="table table-bordered">
+            <tr>
+                <td>
+                    <div class="row">
+                        <div class="float-start col-8">
+                            <h3>Data Barang</h3>
+                        </div>
+                        <div class="col-4 text-end">
+                            <!-- Button trigger modal -->
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#staticBackdrop" id="buttonTambah">
+                            tambah
+                            </button>
+
+                            <!-- Modal -->
+                            <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                <div class="modal-header">
+                                    <h1 class="modal-title fs-5" id="staticBackdropLabel">Tambah Barang</h1>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <label for="kodeBarang" class="form-label float-start">Kode Barang</label>
+                                    <input type="text" name="kodeBarang" id="kodeBarang" class="form-control" readonly>
+                                    <label for="nama" class="form-label float-start">Nama</label>
+                                    <input type="text" name="nama" id="nama" class="form-control" placeholder="Nama Kategori">
+                                    <label for="kategoriBarang" class="form-label float-start">Kategori</label>
+                                    <select name="kategoriBarang" id="kategoriBarang" class="form-select">
+                                        <option value="">Pilih Kategori</option>
+                                    </select>
+                                    <div class="row">
+                                        <div class="col-4">
+                                            <label for="stokBarang" class="form-label float-start">Stok</label>
+                                            <input type="number" name="stokBarang" id="stokBarang" class="form-control">
+                                        </div>
+                                        <div class="col-4">
+                                            <label for="hargaModal" class="form-label float-start">Harga Modal</label>
+                                            <input type="number" name="hargaModal" id="hargaModal" class="form-control">
+                                        </div>
+                                        <div class="col-4">
+                                            <label for="hargaJual" class="form-label float-start">Harga Jual</label>
+                                            <input type="number" name="hargaJual" id="hargaJual" class="form-control">                                   
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Batal</button>
+                                    <button type="submit" class="btn btn-primary" id="buttonTambah">Tambah</button>
+                                    <button type="reset" class="btn btn-warning" id="buttonReset">Reset</button>
+                                </div>
+                                </div>
+                            </div>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <table class="table table-bordered" id="example">
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Kode Barang</th>
+                                <th>Nama</th>
+                                <th>Stok</th>
+                                <th>Kategori</th>
+                                <th>Harga Modal</th>
+                                <th>Harga Jual</th>
+                                <th>Tanggal</th>
+                                <th>Opsi</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            var table = $('#example').DataTable();
+
+            function loadKategori() {
+                $.ajax({
+                    url: 'http://localhost:8080/kategori',
+                    method: 'get',
+                    success: function (param) {  
+                        var kategoriDrop = $('#kategoriBarang');
+                        kategoriDrop.empty();
+                        kategoriDrop.append('<option value="">Pilih Kategori</option>');
+                        param.forEach(function (kategori) {  
+                            kategoriDrop.append('<option value="' + kategori.id + '">' + kategori.nama + '</option>');
+                        });
+                    },
+                    error: function (xhr, status) {  
+                        console.log("gagal load kategori", xhr.status);
+                    }
+                });
+            };
+
+            loadKategori();
+
+            $('#buttonTambah').on('click', function () {  
+                $.ajax({
+                    url: 'http://localhost:8080/kode-barang',
+                    method: 'get',
+                    success: function (kode) {  
+                        $('#kodeBarang').val(kode);
+                    },
+                    error: function (xhr, status) {  
+                        console.log('gagal generate kode barang', xhr.status);
+                    }
+                })
+            })
+            
+        });
+    </script>
+</body>
+</html>
